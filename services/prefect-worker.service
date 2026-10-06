@@ -1,0 +1,27 @@
+[Unit]
+Description=Prefect Worker
+After=prefect-server.service
+Requires=prefect-server.service
+
+[Service]
+Type=simple
+User=tdm
+WorkingDirectory=/home/tdm/Documents/prefect
+Environment=PREFECT_HOME=/home/tdm/Documents/prefect/.prefect
+Environment=PREFECT_API_URL=http://127.0.0.1:4200/prefect/api
+EnvironmentFile=-/home/tdm/Documents/prefect/services/.prefect.env
+EnvironmentFile=-/home/tdm/.config/prefect-worker.env
+ExecStartPre=/bin/bash -lc 'for i in {1..60}; do /usr/bin/curl -fsS http://127.0.0.1:4200/prefect/api/health >/dev/null && exit 0; sleep 1; done; exit 1'
+ExecStart=/home/tdm/Documents/prefect/.venv/bin/prefect worker start \
+    --pool default-agent-pool \
+    --type process \
+    --limit 8
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prefect-worker
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "orchestration"
+version = "0.1.0"
+description = "Prefect orchestration for local SeKnowledgeBank jobs."
+authors = ["tdm"]
+packages = [
+    { include = "flows" },
+    { include = "config" },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.15"
+prefect = "^3.7.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

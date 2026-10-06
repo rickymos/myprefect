@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+export PYTHONPATH="$ROOT_DIR"
+export PREFECT_HOME="${PREFECT_HOME:-$ROOT_DIR/.prefect}"
+export PREFECT_API_URL="${PREFECT_API_URL:-http://127.0.0.1:4200/prefect/api}"
+
+exec "$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/deploy.py"

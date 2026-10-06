@@ -1,0 +1,28 @@
+[Unit]
+Description=Prefect Orchestration Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tdm
+WorkingDirectory=/home/tdm/Documents/prefect
+Environment=PREFECT_HOME=/home/tdm/Documents/prefect/.prefect
+Environment=PREFECT_UI_SERVE_BASE=/prefect/
+Environment=PREFECT_SERVER_API_BASE_PATH=/prefect/api
+Environment=PREFECT_UI_API_URL=http://127.0.0.1:4200/prefect/api
+Environment=PREFECT_UI_URL=http://127.0.0.1:4200/prefect
+EnvironmentFile=-/home/tdm/Documents/prefect/services/.prefect.env
+EnvironmentFile=-/home/tdm/.config/prefect-server.env
+ExecStart=/home/tdm/Documents/prefect/.venv/bin/prefect server start \
+    --host 127.0.0.1 \
+    --port 4200
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prefect-server
+
+[Install]
+WantedBy=multi-user.target

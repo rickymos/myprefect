@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+export PYTHONPATH="$ROOT_DIR"
+export PREFECT_HOME="${PREFECT_HOME:-$ROOT_DIR/.prefect}"
+export PREFECT_API_URL="${PREFECT_API_URL:-http://127.0.0.1:4200/prefect/api}"
+
+cmd="${1:-}"
+if [ -n "$cmd" ]; then
+  shift
+fi
+
+case "$cmd" in
+  cleanup-stale-slots)
+    exec "$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/tools/cleanup_stale_slots.py" "$@"
+    ;;
+  cleanup-old-logs)
+    exec "$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/tools/cleanup_old_logs.py" "$@"
+    ;;
+  cleanup-temp-files)
+    exec "$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/tools/cleanup_temp_files.py" "$@"
+    ;;
+  prefect)
+    exec "$ROOT_DIR/.venv/bin/prefect" "$@"
+    ;;
+  *)
+    cat >&2 <<'USAGE'
+Usage:
+  bin/prefect-local cleanup-stale-slots [args...]
+  bin/prefect-local cleanup-old-logs [args...]
+  bin/prefect-local cleanup-temp-files [args...]
+  bin/prefect-local prefect [args...]
+USAGE
+    exit 2
+    ;;
+esac
