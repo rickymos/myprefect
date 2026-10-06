@@ -17,3 +17,6 @@ ETORO_ACTIVITIES_DAILY = CronSchedule(cron="30 6 * * *", timezone="UTC")
 
 # Google Alerts can arrive throughout the day; run after each six-hour block in JST.
 BESS_MONITOR_EVERY_SIX_HOURS = CronSchedule(cron="25 */6 * * *", timezone="Asia/Tokyo")
+
+# BESS discovery once a day, shortly before the 06:25 JST monitor run that extracts promoted pages.
+BESS_DISCOVERY_DAILY = CronSchedule(cron="40 5 * * *", timezone="Asia/Tokyo")

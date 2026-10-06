@@ -17,6 +17,7 @@ from prefect.exceptions import ObjectNotFound
 from prefect.flows import Flow
 
 from config.schedules import (
+    BESS_DISCOVERY_DAILY,
     BESS_MONITOR_EVERY_SIX_HOURS,
     DAILY_PREFECT_TEMP_CLEANUP,
     ETORO_ACTIVITIES_DAILY,
@@ -73,6 +74,20 @@ deployments = [
     source_flow("flows/bess_monitor.py:bess_monitor_flow").to_deployment(
         name="manual",
         parameters={"gmail_limit": 500, "fetch_limit": 100, "process_limit": 60},
+        concurrency_limit=SINGLE_ACTIVE_RUN_LIMIT,
+        work_pool_name=WORK_POOL_NAME,
+    ),
+    source_flow("flows/bess_discovery.py:bess_discovery_flow").to_deployment(
+        name="daily",
+        schedule=BESS_DISCOVERY_DAILY,
+        paused=False,
+        parameters={"promote": 20},
+        concurrency_limit=SINGLE_ACTIVE_RUN_LIMIT,
+        work_pool_name=WORK_POOL_NAME,
+    ),
+    source_flow("flows/bess_discovery.py:bess_discovery_flow").to_deployment(
+        name="manual",
+        parameters={"promote": 0},
         concurrency_limit=SINGLE_ACTIVE_RUN_LIMIT,
         work_pool_name=WORK_POOL_NAME,
     ),
