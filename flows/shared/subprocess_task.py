@@ -29,6 +29,7 @@ from typing import Any, Callable, Iterable, Sequence
 from prefect import get_run_logger, task
 from prefect.runtime import flow_run, task_run
 
+from config.limits import TASK_TIMEOUT_SECONDS
 from flows.shared.notifications import send_failure_email
 
 CommandBuilder = Callable[[dict[str, Any]], list[str]]
@@ -66,7 +67,7 @@ def make_cli_task(
     cmd: Sequence[str] | None = None,
     retries: int = 1,
     retry_delay_seconds: int = 900,
-    timeout_seconds: int | None = 1800,
+    timeout_seconds: int | None = TASK_TIMEOUT_SECONDS,
     tags: Iterable[str] | None = None,
     cmd_builder: CommandBuilder | None = None,
     skip_if_running_key: str | None = None,
@@ -86,6 +87,13 @@ def make_cli_task(
     """
     if (cmd is None) == (cmd_builder is None):
         raise ValueError("Provide exactly one of cmd or cmd_builder")
+    # Never let a CLI task outlive the shared run limit (see config/limits.py).
+    timeout_seconds = min(timeout_seconds or TASK_TIMEOUT_SECONDS, TASK_TIMEOUT_SECONDS)
+    if retries and (retries + 1) * timeout_seconds + retries * retry_delay_seconds > TASK_TIMEOUT_SECONDS:
+        raise ValueError(
+            f"Task '{task_name}': {retries} retries with timeout {timeout_seconds}s and delay "
+            f"{retry_delay_seconds}s could exceed the {TASK_TIMEOUT_SECONDS}s run limit"
+        )
 
     def _lock_name(value: str) -> str:
         return "".join(ch if ch.isalnum() or ch in {"-", "_", "."} else "_" for ch in value)

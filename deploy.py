@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 
 from prefect.client.orchestration import get_client
+from prefect.client.schemas.objects import ConcurrencyLimitConfig, ConcurrencyLimitStrategy
 from prefect.exceptions import ObjectNotFound
 from prefect.flows import Flow
 
@@ -25,7 +26,9 @@ from config.schedules import (
 )
 
 WORK_POOL_NAME = os.getenv("PREFECT_WORK_POOL_NAME", "default-agent-pool")
-SINGLE_ACTIVE_RUN_LIMIT = 1
+# One active run per deployment. A run that becomes due while another is still running is
+# cancelled instead of queued, so backlogs never pile up behind a slow or stuck run.
+SINGLE_ACTIVE_RUN_LIMIT = ConcurrencyLimitConfig(limit=1, collision_strategy=ConcurrencyLimitStrategy.CANCEL_NEW)
 PREFECT_ROOT = Path(__file__).resolve().parent
 EXPECTED_PREFECT_HOME = str(PREFECT_ROOT / ".prefect")
 EXPECTED_PREFECT_API_URL = "http://127.0.0.1:4200/prefect/api"
@@ -63,13 +66,13 @@ deployments = [
         name="every-six-hours",
         schedule=BESS_MONITOR_EVERY_SIX_HOURS,
         paused=False,
-        parameters={"gmail_limit": 500, "fetch_limit": 100, "process_limit": 100},
+        parameters={"gmail_limit": 500, "fetch_limit": 100, "process_limit": 60},
         concurrency_limit=SINGLE_ACTIVE_RUN_LIMIT,
         work_pool_name=WORK_POOL_NAME,
     ),
     source_flow("flows/bess_monitor.py:bess_monitor_flow").to_deployment(
         name="manual",
-        parameters={"gmail_limit": 500, "fetch_limit": 100, "process_limit": 100},
+        parameters={"gmail_limit": 500, "fetch_limit": 100, "process_limit": 60},
         concurrency_limit=SINGLE_ACTIVE_RUN_LIMIT,
         work_pool_name=WORK_POOL_NAME,
     ),

@@ -4,6 +4,7 @@ from __future__ import annotations
 from prefect import flow
 
 from config.envs import SEKNOWLEDGEBANK_API
+from config.limits import MAX_RUN_SECONDS, TASK_TIMEOUT_SECONDS
 from flows.shared.subprocess_task import make_cli_task
 
 
@@ -16,7 +17,7 @@ def _build_bess_command(params: dict) -> list[str]:
         "--fetch-limit",
         str(int(params.get("fetch_limit") or 100)),
         "--process-limit",
-        str(int(params.get("process_limit") or 100)),
+        str(int(params.get("process_limit") or 60)),
     ]
     if params.get("skip_gmail"):
         command.append("--skip-gmail")
@@ -32,18 +33,17 @@ _bess_monitor_task = make_cli_task(
     cwd=SEKNOWLEDGEBANK_API["cwd"],
     task_name="bess-japan-monitor",
     cmd_builder=_build_bess_command,
-    retries=2,
-    retry_delay_seconds=900,
-    timeout_seconds=14400,
+    retries=0,
+    timeout_seconds=TASK_TIMEOUT_SECONDS,
     skip_if_running_key="bess-japan-monitor",
 )
 
 
-@flow(name="bess-japan-monitor", log_prints=True)
+@flow(name="bess-japan-monitor", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
 def bess_monitor_flow(
     gmail_limit: int = 500,
     fetch_limit: int = 100,
-    process_limit: int = 100,
+    process_limit: int = 60,
     skip_gmail: bool = False,
     skip_fetch: bool = False,
     skip_extraction: bool = False,
