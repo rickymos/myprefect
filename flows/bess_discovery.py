@@ -20,6 +20,8 @@ def _build_discovery_command(params: dict) -> list[str]:
         command += ["--source", str(source)]
     if params.get("force"):
         command.append("--force")
+    if params.get("all_pages"):
+        command += ["--all-pages", "--max-pages", str(int(params.get("max_pages") or 50))]
     return command
 
 
@@ -35,6 +37,16 @@ _bess_discovery_task = make_cli_task(
 
 
 @flow(name="bess-discovery", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
-def bess_discovery_flow(promote: int = 20, sources: list[str] | None = None, force: bool = False) -> None:
-    """Poll allowed discovery sources and queue up to ``promote`` new candidates for extraction."""
-    _bess_discovery_task({"promote": promote, "sources": sources or [], "force": force})
+def bess_discovery_flow(
+    promote: int = 20,
+    sources: list[str] | None = None,
+    force: bool = False,
+    all_pages: bool = False,
+    max_pages: int = 50,
+) -> None:
+    """Poll allowed discovery sources and queue up to ``promote`` new candidates for extraction.
+
+    ``all_pages`` follows every page of each source (full history, e.g. all PR TIMES releases).
+    """
+    _bess_discovery_task({"promote": promote, "sources": sources or [], "force": force,
+                          "all_pages": all_pages, "max_pages": max_pages})
