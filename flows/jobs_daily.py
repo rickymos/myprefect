@@ -7,6 +7,7 @@ from prefect import flow
 
 from config.envs import JOBS
 from config.limits import MAX_RUN_SECONDS, TASK_TIMEOUT_SECONDS
+from flows.shared.run_names import descriptive_run_name
 from flows.shared.subprocess_task import make_cli_task
 
 
@@ -43,7 +44,8 @@ _job_watch_task = make_cli_task(
 )
 
 
-@flow(name="job-watch", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
+@flow(name="job-watch", flow_run_name=descriptive_run_name, log_prints=True,
+      timeout_seconds=MAX_RUN_SECONDS)
 def job_watch_flow(
     today: str | None = None,
     limit: int = 80,

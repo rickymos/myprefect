@@ -5,6 +5,7 @@ from prefect import flow
 
 from config.envs import ETORO
 from config.limits import MAX_RUN_SECONDS, TASK_TIMEOUT_SECONDS
+from flows.shared.run_names import descriptive_run_name
 from flows.shared.subprocess_task import make_cli_task
 
 
@@ -30,13 +31,15 @@ _activities_task = make_cli_task(
 )
 
 
-@flow(name="etoro-snaptrade-holdings", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
+@flow(name="etoro-snaptrade-holdings", flow_run_name=descriptive_run_name, log_prints=True,
+      timeout_seconds=MAX_RUN_SECONDS)
 def etoro_snaptrade_holdings_flow() -> None:
     """Snapshot account balances and open positions every four hours."""
     _holdings_task()
 
 
-@flow(name="etoro-snaptrade-activities", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
+@flow(name="etoro-snaptrade-activities", flow_run_name=descriptive_run_name, log_prints=True,
+      timeout_seconds=MAX_RUN_SECONDS)
 def etoro_snaptrade_activities_flow() -> None:
     """Ingest daily trades, dividends, fees, taxes, and cash movements."""
     _activities_task()

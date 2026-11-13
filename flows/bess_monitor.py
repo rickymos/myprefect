@@ -5,6 +5,7 @@ from prefect import flow
 
 from config.envs import SEKNOWLEDGEBANK_API
 from config.limits import MAX_RUN_SECONDS, TASK_TIMEOUT_SECONDS
+from flows.shared.run_names import descriptive_run_name
 from flows.shared.subprocess_task import make_cli_task
 
 
@@ -39,7 +40,8 @@ _bess_monitor_task = make_cli_task(
 )
 
 
-@flow(name="bess-japan-monitor", log_prints=True, timeout_seconds=MAX_RUN_SECONDS)
+@flow(name="bess-japan-monitor", flow_run_name=descriptive_run_name, log_prints=True,
+      timeout_seconds=MAX_RUN_SECONDS)
 def bess_monitor_flow(
     gmail_limit: int = 500,
     fetch_limit: int = 100,

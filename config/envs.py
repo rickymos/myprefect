@@ -22,3 +22,13 @@ SEKNOWLEDGEBANK_API = {
     "venv_bin": str(DOCS / "seknowledgebank/api/.venv/bin"),
     "cwd": str(DOCS / "seknowledgebank/api"),
 }
+
+SEKNOWLEDGEBANK_FLIGHT_ENGINE = {
+    "venv_bin": str(DOCS / "seknowledgebank/engine/.venv/bin"),
+    "cwd": str(DOCS / "seknowledgebank/engine"),
+}
+
+JAPANMARKET = {
+    "venv_bin": str(DOCS / "japanmarket/.venv/bin"),
+    "cwd": str(DOCS / "japanmarket"),
+}

@@ -4,14 +4,24 @@ Local Prefect orchestration for SeKnowledgeBank jobs.
 
 ## What Runs
 
-- `job-watch/daily`: runs every day at `07:15 Africa/Nairobi`.
-- `bess-japan-monitor/every-six-hours`: ingests Japanese Google Alerts, fetches sources, and extracts canonical projects every six hours (JST).
-- `etoro-snaptrade-holdings/every-four-hours`: snapshots balances and open positions at minute 17 every four hours (UTC).
-- `etoro-snaptrade-activities/daily`: ingests transactions, dividends, fees, and cash movements daily at `06:30 UTC`.
+- `job-watch/job-watch-daily`: runs every day at `07:15 Africa/Nairobi`.
+- `bess-japan-monitor/bess-japan-monitor-every-six-hours`: ingests Japanese Google Alerts, fetches sources, and extracts canonical projects every six hours (JST).
+- `jepx-update/jepx-update-daily`: imports JEPX market files and imbalance prices into `japan_energy` at 00:00 JST.
+- `bess-simulation/bess-simulation-daily`: solves and saves the standard BESS optimiser runs (`japanmarket.simulation`) at 01:00 JST, after the JEPX import.
+- `grid-tariffs/grid-tariffs-weekly`: scans the T&D companies' and METI's tariff pages for new documents, saves them to Cloudflare R2 and extracts candidate pages for review (`japanmarket.grid_tariffs`), every Sunday at 02:00 JST. It never enters rates: they are reviewed by hand.
+- `fit-fip-update/fit-fip-update-weekly`: imports changed prefectures of METI's FIT/FIP register every Saturday at 00:00 JST.
+- `flight-route-search/flight-route-search-twice-daily`: refreshes all active flight scenarios at 00:00 and 12:00 Australia/Melbourne.
+- `bess-duplicate-audit/bess-duplicate-audit-weekly`: re-scores proposals and reports suspected project duplicates every Monday at 03:00 JST; it never merges automatically.
+- `etoro-snaptrade-holdings/etoro-snaptrade-holdings-every-four-hours`: snapshots balances and open positions at minute 17 every four hours (UTC).
+- `etoro-snaptrade-activities/etoro-snaptrade-activities-daily`: ingests transactions, dividends, fees, and cash movements daily at `06:30 UTC`.
 - Both eToro flows also have `manual` deployments for ad hoc runs.
-- `job-watch/manual`: same flow without a schedule for ad hoc runs.
+- `job-watch/job-watch-manual`: same flow without a schedule for ad hoc runs.
 - `prefect-housekeeping/*`: Prefect DB/log cleanup helpers.
 - `prefect-temp-cleanup/*`: conservative temp-file cleanup.
+
+Flow runs use descriptive names instead of Prefect's random adjective/animal names:
+`<flow>__<deployment>__<scheduled UTC time>__<run id>`, for example
+`bess-japan-monitor__every-six-hours__20261022-0325__12345678`.
 
 The daily job command is:
 
@@ -39,16 +49,17 @@ sudo systemctl status prefect-server.service prefect-worker.service --no-pager
 sudo journalctl -u prefect-worker.service -f
 
 ./bin/prefect-local prefect deployment ls
-./bin/prefect-local prefect deployment run 'job-watch/manual' \
+./bin/prefect-local prefect deployment run 'job-watch/job-watch-manual' \
   -p today='"2026-07-06"' \
   -p limit=80 \
   -p save_policy='"relevant"' \
   --watch
 
-./bin/prefect-local prefect deployment run 'etoro-snaptrade-holdings/manual' --watch
-./bin/prefect-local prefect deployment run 'bess-japan-monitor/manual' \
+./bin/prefect-local prefect deployment run 'etoro-snaptrade-holdings/etoro-snaptrade-holdings-manual' --watch
+./bin/prefect-local prefect deployment run 'flight-route-search/flight-route-search-manual' --watch
+./bin/prefect-local prefect deployment run 'bess-japan-monitor/bess-japan-monitor-manual' \
   -p gmail_limit=500 -p fetch_limit=100 -p process_limit=100 --watch
-./bin/prefect-local prefect deployment run 'etoro-snaptrade-activities/manual' --watch
+./bin/prefect-local prefect deployment run 'etoro-snaptrade-activities/etoro-snaptrade-activities-manual' --watch
 
 ./bin/deploy-local
 ```
